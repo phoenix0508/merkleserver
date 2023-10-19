@@ -1,0 +1,74 @@
+syntax = "proto3";
+
+package merkle_storage.v1;
+
+option go_package = "/pkg";
+
+import "google/api/annotations.proto";
+import "google/protobuf/empty.proto";
+import "google/protobuf/any.proto";
+import "google/protobuf/wrappers.proto";
+import "validate/validate.proto";
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/struct.proto";
+
+service Microservice {
+
+   // Endpoint to upload a file to the server
+   rpc UploadFile (UploadFileRequest) returns (UploadFileResponse) {
+    option (google.api.http) = {
+        post: "/v1/files/upload"
+        body: "*"
+    };
+  }
+
+  // Endpoint to download a file from the server and get its Merkle proof
+  rpc DownloadFile (DownloadFileRequest) returns (DownloadFileResponse) {
+      option (google.api.http) = {
+          get: "/v1/files/download/{fileId}"
+      };
+  }
+
+  // Endpoint to verify the Merkle proof for a file against a client's saved Merkle root
+  rpc VerifyMerkleProof (VerifyMerkleProofRequest) returns (VerifyMerkleProofResponse) {
+      option (google.api.http) = {
+          post: "/v1/files/verify"
+          body: "*"
+      };
+  }
+}
+
+message UploadFileRequest {
+  repeated bytes files = 1;     // File content in bytes
+}
+
+message UploadFileResponse {
+  repeated string fileIds = 1;             // Unique identifier for the uploaded file (file hash)
+}
+
+message DownloadFileRequest {
+  string fileId = 1;             // Identifier for the file to be downloaded
+}
+
+message MerkleProof {
+  repeated string hashes = 1;
+  repeated bool isLeft = 2;
+  string target = 3;
+}
+
+message DownloadFileResponse {
+  bytes content = 1;             // File content in bytes
+  MerkleProof merkleProof = 2;       // Merkle proof for the downloaded file
+}
+
+message VerifyMerkleProofRequest {
+  string fileId = 1;             // Identifier of the file
+  string clientMerkleRoot = 2;  // Client's saved Merkle root hash
+}
+
+message VerifyMerkleProofResponse {
+  bool isValid = 1;              // Indicates whether the file is valid based on the Merkle proof
+}
+
+
+
